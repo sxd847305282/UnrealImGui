@@ -99,6 +99,11 @@ static void ImGui_CreateWindow(ImGuiViewport* Viewport)
 		{
 			FSlateApplication::Get().AddWindow(Window);
 		}
+
+		if (!(Viewport->Flags & ImGuiViewportFlags_OwnedByApp))
+		{
+			FSlateThrottleManager::Get().DisableThrottle(true);
+		}
 	}
 }
 
@@ -113,6 +118,8 @@ static void ImGui_DestroyWindow(ImGuiViewport* Viewport)
 			{
 				Window->RequestDestroyWindow();
 			}
+
+			FSlateThrottleManager::Get().DisableThrottle(false);
 		}
 
 		Viewport->PlatformUserData = nullptr;

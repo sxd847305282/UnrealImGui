@@ -101,7 +101,7 @@ public:
 		}
 #endif
 
-		if (IO.WantCaptureKeyboard && !Owner->HasKeyboardFocus())
+		if (IO.WantTextInput && !Owner->HasKeyboardFocus())
 		{
 			// No HandleKeyCharEvent so punt focus to the widget for it to receive OnKeyChar events
 			SlateApp.SetKeyboardFocus(Owner->AsShared());
@@ -215,7 +215,7 @@ public:
 			IO.AddMouseButtonEvent(ImGuiMouseButton_Middle, false);
 		}
 
-		return IO.WantCaptureMouse;
+		return false;
 	}
 
 	virtual bool HandleMouseButtonDoubleClickEvent(FSlateApplication& SlateApp, const FPointerEvent& Event) override
@@ -358,7 +358,7 @@ FReply SImGuiOverlay::OnKeyChar(const FGeometry& MyGeometry, const FCharacterEve
 
 	IO.AddInputCharacter(CharCast<ANSICHAR>(Event.GetCharacter()));
 
-	return IO.WantCaptureKeyboard ? FReply::Handled() : FReply::Unhandled();
+	return IO.WantTextInput ? FReply::Handled() : FReply::Unhandled();
 }
 
 TSharedPtr<FImGuiContext> SImGuiOverlay::GetContext() const
