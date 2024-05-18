@@ -29,7 +29,9 @@ uint64 ImFileWrite(const void* Data, uint64 Size, uint64 Count, ImFileHandle Fil
 	operator FVector2d() const { return FVector2d(x, y); } \
 	constexpr ImVec2(const FVector2d& V) : x(V.X), y(V.Y) {} \
 	operator FIntPoint() const { return FIntPoint(x, y); } \
-	constexpr ImVec2(const FIntPoint& V) : x(V.X), y(V.Y) {}
+	constexpr ImVec2(const FIntPoint& V) : x(V.X), y(V.Y) {} \
+	operator FIntVector2() const { return FIntVector2(x, y); } \
+	constexpr ImVec2(const FIntVector2& V) : x(V.X), y(V.Y) {}
 
 #define IM_VEC4_CLASS_EXTRA \
 	operator FVector4() const { return FVector4(x, y, z, w); } \
@@ -40,7 +42,7 @@ uint64 ImFileWrite(const void* Data, uint64 Size, uint64 Count, ImFileHandle Fil
 	constexpr ImVec4(const FLinearColor& C) : x(C.R), y(C.G), z(C.B), w(C.A) {}
 
 #if WITH_ENGINE
-#define ImTextureID class UTexture2D*
+#define ImTextureID class UTexture*
 #else
 #define ImTextureID struct FSlateBrush*
 #endif
