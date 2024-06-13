@@ -33,6 +33,25 @@ public:
 	explicit FImGuiInputProcessor(SImGuiOverlay* InOwner)
 	{
 		Owner = InOwner;
+
+		FSlateApplication::Get().OnApplicationActivationStateChanged().AddRaw(this, &FImGuiInputProcessor::OnApplicationActivationChanged);
+	}
+
+	virtual ~FImGuiInputProcessor() override
+	{
+		if (FSlateApplication::IsInitialized())
+		{
+			FSlateApplication::Get().OnApplicationActivationStateChanged().RemoveAll(this);
+		}
+	}
+
+	void OnApplicationActivationChanged(bool bIsActive) const
+	{
+		ImGui::FScopedContext ScopedContext(Owner->GetContext());
+
+		ImGuiIO& IO = ImGui::GetIO();
+
+		IO.AddFocusEvent(bIsActive);
 	}
 
 	virtual void Tick(const float DeltaTime, FSlateApplication& SlateApp, TSharedRef<ICursor> SlateCursor) override
