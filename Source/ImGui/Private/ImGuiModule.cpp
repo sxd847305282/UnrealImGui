@@ -108,7 +108,13 @@ TSharedPtr<FImGuiContext> FImGuiModule::FindOrCreateSessionContext(const int32 P
 
 void FImGuiModule::OnEndPIE(bool bIsSimulating)
 {
-	SessionContexts.Reset();
+	for (auto ContextIt = SessionContexts.CreateIterator(); ContextIt; ++ContextIt)
+	{
+		if (ContextIt->Key != INDEX_NONE)
+		{
+			ContextIt.RemoveCurrent();
+		}
+	}
 }
 
 void FImGuiModule::OnViewportCreated() const
