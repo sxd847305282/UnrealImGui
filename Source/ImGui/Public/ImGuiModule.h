@@ -28,6 +28,7 @@ public:
 
 private:
 	void OnEndPIE(bool bIsSimulating);
+	void OnViewportCreated() const;
 
 	TMap<int32, TSharedPtr<FImGuiContext>> SessionContexts;
 };

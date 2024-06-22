@@ -262,11 +262,9 @@ void SImGuiOverlay::Construct(const FArguments& Args)
 {
 	SetVisibility(EVisibility::HitTestInvisible);
 
-	Context = Args._Context;
-	if (!Context.IsValid())
+	Context = Args._Context.IsValid() ? Args._Context : FImGuiContext::Create();
+	if (Args._HandleInput)
 	{
-		Context = FImGuiContext::Create();
-
 		InputProcessor = MakeShared<FImGuiInputProcessor>(this);
 		FSlateApplication::Get().RegisterInputPreProcessor(InputProcessor.ToSharedRef(), 0);
 	}

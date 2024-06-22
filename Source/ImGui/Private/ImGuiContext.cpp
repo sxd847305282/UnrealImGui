@@ -89,6 +89,7 @@ static void ImGui_CreateWindow(ImGuiViewport* Viewport)
 			[
 				SAssignNew(ViewportData->Overlay, SImGuiOverlay)
 				.Context(FImGuiContext::Get(ImGui::GetCurrentContext()))
+				.HandleInput(false)
 			];
 
 		if (ParentWindow.IsValid())
