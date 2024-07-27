@@ -91,3 +91,6 @@ namespace ImGui
 	/// Converts between Unreal and ImGui 32-bit color types
 	IMGUI_API FColor ConvertColor(uint32 Color);
 }
+
+#define IMGUI_INCLUDE_IMGUI_USER_H
+#define IMGUI_USER_H_FILENAME "ImGuiConfig.inl"
