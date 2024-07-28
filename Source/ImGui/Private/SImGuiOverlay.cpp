@@ -19,8 +19,7 @@ FImGuiDrawData::FImGuiDrawData(const ImDrawData* Source)
 	TotalIdxCount = Source->TotalIdxCount;
 	TotalVtxCount = Source->TotalVtxCount;
 
-	DrawLists.SetNumUninitialized(Source->CmdListsCount);
-	ConstructItems<FImGuiDrawList>(DrawLists.GetData(), Source->CmdLists.Data, Source->CmdListsCount);
+	ImGui::CopyArray(Source->CmdLists, DrawLists);
 
 	DisplayPos = Source->DisplayPos;
 	DisplaySize = Source->DisplaySize;
@@ -287,36 +286,31 @@ int32 SImGuiOverlay::OnPaint(const FPaintArgs& Args, const FGeometry& AllottedGe
 
 	const FSlateRenderTransform Transform(AllottedGeometry.GetAccumulatedRenderTransform().GetTranslation() - FVector2d(DrawData.DisplayPos));
 
+	TArray<FSlateVertex> Vertices;
+	TArray<SlateIndex> Indices;
 	FSlateBrush TextureBrush;
+
 	for (const FImGuiDrawList& DrawList : DrawData.DrawLists)
 	{
-		TArray<FSlateVertex> Vertices;
 		Vertices.SetNumUninitialized(DrawList.VtxBuffer.Size);
-		for (int32 BufferIdx = 0; BufferIdx < Vertices.Num(); ++BufferIdx)
-		{
-			const ImDrawVert& Vtx = DrawList.VtxBuffer.Data[BufferIdx];
 
-			FSlateVertex& SlateVtx = Vertices[BufferIdx];
-			SlateVtx.TexCoords[0] = Vtx.uv.x;
-			SlateVtx.TexCoords[1] = Vtx.uv.y;
-			SlateVtx.TexCoords[2] = 1;
-			SlateVtx.TexCoords[3] = 1;
-			SlateVtx.Position = TransformPoint(Transform, FVector2f(Vtx.pos));
-			SlateVtx.Color = ImGui::ConvertColor(Vtx.col);
+		ImDrawVert* SrcVertex = DrawList.VtxBuffer.Data;
+		FSlateVertex* DstVertex = Vertices.GetData();
+
+		for (int32 BufferIdx = 0; BufferIdx < Vertices.Num(); ++BufferIdx, ++SrcVertex, ++DstVertex)
+		{
+			DstVertex->TexCoords[0] = SrcVertex->uv.x;
+			DstVertex->TexCoords[1] = SrcVertex->uv.y;
+			DstVertex->TexCoords[2] = 1;
+			DstVertex->TexCoords[3] = 1;
+			DstVertex->Position = TransformPoint(Transform, FVector2f(SrcVertex->pos));
+			DstVertex->Color.Bits = SrcVertex->col;
 		}
 
-		TArray<SlateIndex> Indices;
-		Indices.SetNumUninitialized(DrawList.IdxBuffer.Size);
-		for (int32 BufferIdx = 0; BufferIdx < Indices.Num(); ++BufferIdx)
-		{
-			Indices[BufferIdx] = DrawList.IdxBuffer.Data[BufferIdx];
-		}
+		ImGui::CopyArray(DrawList.IdxBuffer, Indices);
 
 		for (const ImDrawCmd& DrawCmd : DrawList.CmdBuffer)
 		{
-			TArrayView<FSlateVertex> VerticesSlice(Vertices.GetData() + DrawCmd.VtxOffset, Vertices.Num() - DrawCmd.VtxOffset);
-			TArrayView<SlateIndex> IndicesSlice(Indices.GetData() + DrawCmd.IdxOffset, DrawCmd.ElemCount);
-
 #if WITH_ENGINE
 			UTexture* Texture = DrawCmd.GetTexID();
 			if (TextureBrush.GetResourceObject() != Texture)
@@ -356,7 +350,14 @@ int32 SImGuiOverlay::OnPaint(const FPaintArgs& Args, const FGeometry& AllottedGe
 			ClipRect = TransformRect(Transform, ClipRect);
 
 			OutDrawElements.PushClip(FSlateClippingZone(ClipRect));
-			FSlateDrawElement::MakeCustomVerts(OutDrawElements, LayerId, TextureBrush.GetRenderingResource(), TArray<FSlateVertex>(VerticesSlice), TArray<SlateIndex>(IndicesSlice), nullptr, 0, 0);
+
+			FSlateDrawElement::MakeCustomVerts(
+				OutDrawElements, LayerId, TextureBrush.GetRenderingResource(),
+				TArray(Vertices.GetData() + DrawCmd.VtxOffset, Vertices.Num() - DrawCmd.VtxOffset),
+				TArray(Indices.GetData() + DrawCmd.IdxOffset, DrawCmd.ElemCount),
+				nullptr, 0, 0
+			);
+
 			OutDrawElements.PopClip();
 		}
 	}
