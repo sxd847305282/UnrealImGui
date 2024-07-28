@@ -41,6 +41,12 @@ uint64 ImFileWrite(const void* Data, uint64 Size, uint64 Count, ImFileHandle Fil
 	operator FLinearColor() const { return FLinearColor(x, y, z, w); } \
 	constexpr ImVec4(const FLinearColor& C) : x(C.R), y(C.G), z(C.B), w(C.A) {}
 
+#define IM_COL32_R_SHIFT ImGui::ImCol32RShift
+#define IM_COL32_G_SHIFT ImGui::ImCol32GShift
+#define IM_COL32_B_SHIFT ImGui::ImCol32BShift
+#define IM_COL32_A_SHIFT ImGui::ImCol32AShift
+#define IM_COL32_A_MASK ImGui::ImCol32AMask
+
 #if WITH_ENGINE
 #define ImTextureID class UTexture*
 #else
@@ -55,6 +61,13 @@ struct FKey;
 
 namespace ImGui
 {
+	// Pack ImGui 32-bit colors so they're bit compatible with FColor
+	inline constexpr uint32 ImCol32RShift = offsetof(FColor, R) * 8;
+	inline constexpr uint32 ImCol32GShift = offsetof(FColor, G) * 8;
+	inline constexpr uint32 ImCol32BShift = offsetof(FColor, B) * 8;
+	inline constexpr uint32 ImCol32AShift = offsetof(FColor, A) * 8;
+	inline constexpr uint32 ImCol32AMask = (0xFF << ImCol32AShift);
+
 	/// Helper to safely scope ImGui drawing to a specific context; in most cases you should
 	/// use the default constructor to switch to the current game, editor, or PIE context:
 	/// @code
@@ -85,11 +98,8 @@ namespace ImGui
 		ImPlotContext* PrevPlotContext = nullptr;
 	};
 
-	/// Converts between Unreal and ImGui key types
+	/// Converts ImGui key to UE key
 	IMGUI_API ImGuiKey ConvertKey(const FKey& Key);
-
-	/// Converts between Unreal and ImGui 32-bit color types
-	IMGUI_API FColor ConvertColor(uint32 Color);
 }
 
 #define IMGUI_INCLUDE_IMGUI_USER_H

@@ -1,11 +1,10 @@
 #pragma once
 
-FORCEINLINE FColor ImGui::ConvertColor(uint32 Color)
+namespace ImGui
 {
-	return FColor(
-		(Color >> IM_COL32_R_SHIFT) & 0xFF,
-		(Color >> IM_COL32_G_SHIFT) & 0xFF,
-		(Color >> IM_COL32_B_SHIFT) & 0xFF,
-		(Color >> IM_COL32_A_SHIFT) & 0xFF
-	);
+	/// Converts ImGui 32-bit color to UE color
+	IMGUI_API FORCEINLINE FColor ConvertColor(ImU32 Color)
+	{
+		return FColor(Color);
+	}
 }
