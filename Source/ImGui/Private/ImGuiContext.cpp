@@ -2,6 +2,7 @@
 
 #include <Framework/Application/SlateApplication.h>
 #include <HAL/LowLevelMemTracker.h>
+#include <HAL/PlatformProcess.h>
 #include <HAL/UnrealMemory.h>
 #include <Widgets/SWindow.h>
 
@@ -239,14 +240,14 @@ static bool ImGui_GetWindowMinimized(ImGuiViewport* Viewport)
 	return false;
 }
 
-static void ImGui_SetWindowTitle(ImGuiViewport* Viewport, const char* TitleAnsi)
+static void ImGui_SetWindowTitle(ImGuiViewport* Viewport, const char* Title)
 {
 	const FImGuiViewportData* ViewportData = FImGuiViewportData::GetOrCreate(Viewport);
 	if (ViewportData)
 	{
 		if (const TSharedPtr<SWindow> Window = ViewportData->Window.Pin())
 		{
-			Window->SetTitle(FText::FromString(ANSI_TO_TCHAR(TitleAnsi)));
+			Window->SetTitle(FText::FromString(UTF8_TO_TCHAR(Title)));
 		}
 	}
 }
@@ -263,7 +264,7 @@ static void ImGui_SetWindowAlpha(ImGuiViewport* Viewport, float Alpha)
 	}
 }
 
-static void ImGui_RenderWindow(ImGuiViewport* Viewport, void* Data)
+static void ImGui_RenderWindow(ImGuiViewport* Viewport, void* UserData)
 {
 	const FImGuiViewportData* ViewportData = FImGuiViewportData::GetOrCreate(Viewport);
 	if (ViewportData)
@@ -273,6 +274,11 @@ static void ImGui_RenderWindow(ImGuiViewport* Viewport, void* Data)
 			Overlay->SetDrawData(Viewport->DrawData);
 		}
 	}
+}
+
+static bool ImGui_OpenInShell(ImGuiContext* Context, const char* Path)
+{
+	return FPlatformProcess::LaunchFileInDefaultExternalApplication(UTF8_TO_TCHAR(Path));
 }
 
 TSharedRef<FImGuiContext> FImGuiContext::Create()
@@ -331,6 +337,8 @@ void FImGuiContext::Initialize()
 	const FString LogFilename = FPaths::ProjectLogDir() / ContextName + TEXT(".log");
 	FCStringAnsi::Strncpy(LogFilenameAnsi, TCHAR_TO_ANSI(*LogFilename), UE_ARRAY_COUNT(LogFilenameAnsi));
 	IO.LogFilename = LogFilenameAnsi;
+
+	IO.PlatformOpenInShellFn = ImGui_OpenInShell;
 
 	ImGuiPlatformIO& PlatformIO = ImGui::GetPlatformIO();
 
