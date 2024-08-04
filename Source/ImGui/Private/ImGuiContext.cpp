@@ -358,7 +358,10 @@ void FImGuiContext::Initialize()
 	PlatformIO.Platform_RenderWindow = ImGui_RenderWindow;
 
 	const FString FontPath = FPaths::EngineContentDir() / TEXT("Slate/Fonts/Roboto-Regular.ttf");
-	IO.Fonts->AddFontFromFileTTF(TCHAR_TO_UTF8(*FontPath), 16);
+	if (FPaths::FileExists(*FontPath))
+	{
+		IO.Fonts->AddFontFromFileTTF(TCHAR_TO_UTF8(*FontPath), 16);
+	}
 
 	if (FSlateApplication::IsInitialized())
 	{
