@@ -66,6 +66,7 @@ private:
 
 	char IniFilenameUtf8[1024] = {};
 	char LogFilenameUtf8[1024] = {};
+	TArray<char> ClipboardBuffer;
 
 	bool bIsRemote = false;
 

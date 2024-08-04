@@ -2,6 +2,7 @@
 
 #include <Framework/Application/SlateApplication.h>
 #include <HAL/LowLevelMemTracker.h>
+#include <HAL/PlatformApplicationMisc.h>
 #include <HAL/PlatformProcess.h>
 #include <HAL/PlatformString.h>
 #include <HAL/UnrealMemory.h>
@@ -277,6 +278,28 @@ static void ImGui_RenderWindow(ImGuiViewport* Viewport, void* UserData)
 	}
 }
 
+const char* ImGui_GetClipboardText(void* UserData)
+{
+	TArray<char>* ClipboardBuffer = static_cast<TArray<char>*>(UserData);
+	if (ClipboardBuffer)
+	{
+		FString ClipboardText;
+		FPlatformApplicationMisc::ClipboardPaste(ClipboardText);
+
+		ClipboardBuffer->SetNumUninitialized(FPlatformString::ConvertedLength<UTF8CHAR>(*ClipboardText));
+		FPlatformString::Convert(reinterpret_cast<UTF8CHAR*>(ClipboardBuffer->GetData()), ClipboardBuffer->Num(), *ClipboardText, ClipboardText.Len() + 1);
+
+		return ClipboardBuffer->GetData();
+	}
+
+	return nullptr;
+}
+
+void ImGui_SetClipboardText(void* UserData, const char* ClipboardText)
+{
+	FPlatformApplicationMisc::ClipboardCopy(UTF8_TO_TCHAR(ClipboardText));
+}
+
 static bool ImGui_OpenInShell(ImGuiContext* Context, const char* Path)
 {
 	return FPlatformProcess::LaunchFileInDefaultExternalApplication(UTF8_TO_TCHAR(Path));
@@ -332,15 +355,16 @@ void FImGuiContext::Initialize()
 	const FString ContextName = (GPlayInEditorID > 0 ? FString::Printf(TEXT("ImGui_%d"), static_cast<int32>(GPlayInEditorID)) : TEXT("ImGui"));
 
 	const FString IniFilename = FPaths::GeneratedConfigDir() / FPlatformProperties::PlatformName() / ContextName + TEXT(".ini");
-	FPlatformString::Convert(reinterpret_cast<UTF8CHAR*>(IniFilenameUtf8), UE_ARRAY_COUNT(IniFilenameUtf8), *IniFilename, IniFilename.Len());
 	FPlatformString::Convert(reinterpret_cast<UTF8CHAR*>(IniFilenameUtf8), UE_ARRAY_COUNT(IniFilenameUtf8), *IniFilename, IniFilename.Len() + 1);
 	IO.IniFilename = IniFilenameUtf8;
 
 	const FString LogFilename = FPaths::ProjectLogDir() / ContextName + TEXT(".log");
-	FPlatformString::Convert(reinterpret_cast<UTF8CHAR*>(LogFilenameUtf8), UE_ARRAY_COUNT(LogFilenameUtf8), *LogFilename, LogFilename.Len());
 	FPlatformString::Convert(reinterpret_cast<UTF8CHAR*>(LogFilenameUtf8), UE_ARRAY_COUNT(LogFilenameUtf8), *LogFilename, LogFilename.Len() + 1);
 	IO.LogFilename = LogFilenameUtf8;
 
+	IO.ClipboardUserData = &ClipboardBuffer;
+	IO.GetClipboardTextFn = ImGui_GetClipboardText;
+	IO.SetClipboardTextFn = ImGui_SetClipboardText;
 	IO.PlatformOpenInShellFn = ImGui_OpenInShell;
 
 	ImGuiPlatformIO& PlatformIO = ImGui::GetPlatformIO();
