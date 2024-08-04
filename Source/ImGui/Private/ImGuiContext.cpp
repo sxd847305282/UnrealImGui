@@ -3,6 +3,7 @@
 #include <Framework/Application/SlateApplication.h>
 #include <HAL/LowLevelMemTracker.h>
 #include <HAL/PlatformProcess.h>
+#include <HAL/PlatformString.h>
 #include <HAL/UnrealMemory.h>
 #include <Widgets/SWindow.h>
 
@@ -331,12 +332,12 @@ void FImGuiContext::Initialize()
 	const FString ContextName = (GPlayInEditorID > 0 ? FString::Printf(TEXT("ImGui_%d"), static_cast<int32>(GPlayInEditorID)) : TEXT("ImGui"));
 
 	const FString IniFilename = FPaths::GeneratedConfigDir() / FPlatformProperties::PlatformName() / ContextName + TEXT(".ini");
-	FCStringAnsi::Strncpy(IniFilenameAnsi, TCHAR_TO_ANSI(*IniFilename), UE_ARRAY_COUNT(IniFilenameAnsi));
-	IO.IniFilename = IniFilenameAnsi;
+	FPlatformString::Convert(reinterpret_cast<UTF8CHAR*>(IniFilenameUtf8), UE_ARRAY_COUNT(IniFilenameUtf8), *IniFilename, IniFilename.Len());
+	IO.IniFilename = IniFilenameUtf8;
 
 	const FString LogFilename = FPaths::ProjectLogDir() / ContextName + TEXT(".log");
-	FCStringAnsi::Strncpy(LogFilenameAnsi, TCHAR_TO_ANSI(*LogFilename), UE_ARRAY_COUNT(LogFilenameAnsi));
-	IO.LogFilename = LogFilenameAnsi;
+	FPlatformString::Convert(reinterpret_cast<UTF8CHAR*>(LogFilenameUtf8), UE_ARRAY_COUNT(LogFilenameUtf8), *LogFilename, LogFilename.Len());
+	IO.LogFilename = LogFilenameUtf8;
 
 	IO.PlatformOpenInShellFn = ImGui_OpenInShell;
 
@@ -357,7 +358,7 @@ void FImGuiContext::Initialize()
 	PlatformIO.Platform_RenderWindow = ImGui_RenderWindow;
 
 	const FString FontPath = FPaths::EngineContentDir() / TEXT("Slate/Fonts/Roboto-Regular.ttf");
-	IO.Fonts->AddFontFromFileTTF(TCHAR_TO_ANSI(*FontPath), 16);
+	IO.Fonts->AddFontFromFileTTF(TCHAR_TO_UTF8(*FontPath), 16);
 
 	if (FSlateApplication::IsInitialized())
 	{

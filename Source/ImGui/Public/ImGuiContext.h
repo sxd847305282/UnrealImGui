@@ -64,8 +64,9 @@ private:
 	ImGuiContext* Context = nullptr;
 	ImPlotContext* PlotContext = nullptr;
 
-	char IniFilenameAnsi[1024] = {};
-	char LogFilenameAnsi[1024] = {};
+	char IniFilenameUtf8[1024] = {};
+	char LogFilenameUtf8[1024] = {};
+
 	bool bIsRemote = false;
 
 #if WITH_ENGINE
