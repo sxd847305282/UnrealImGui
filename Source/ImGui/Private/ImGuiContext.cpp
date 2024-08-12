@@ -195,6 +195,20 @@ static ImVec2 ImGui_GetWindowSize(ImGuiViewport* Viewport)
 	return FVector2f::ZeroVector;
 }
 
+static float ImGui_GetWindowDPI(ImGuiViewport* Viewport)
+{
+	const FImGuiViewportData* ViewportData = FImGuiViewportData::GetOrCreate(Viewport);
+	if (ViewportData)
+	{
+		if (const TSharedPtr<SWindow> Window = ViewportData->Window.Pin())
+		{
+			return Window->GetDPIScaleFactor();
+		}
+	}
+
+	return 1.0f;
+}
+
 static void ImGui_SetWindowFocus(ImGuiViewport* Viewport)
 {
 	const FImGuiViewportData* ViewportData = FImGuiViewportData::GetOrCreate(Viewport);
@@ -344,6 +358,7 @@ void FImGuiContext::Initialize()
 	IO.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;
 	IO.ConfigFlags |= ImGuiConfigFlags_NavEnableSetMousePos;
 	IO.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+	IO.ConfigFlags |= ImGuiConfigFlags_DpiEnableScaleViewports;
 
 	IO.BackendFlags |= ImGuiBackendFlags_HasMouseCursors;
 	IO.BackendFlags |= ImGuiBackendFlags_HasSetMousePos;
@@ -376,6 +391,7 @@ void FImGuiContext::Initialize()
 	PlatformIO.Platform_GetWindowPos = ImGui_GetWindowPos;
 	PlatformIO.Platform_SetWindowSize = ImGui_SetWindowSize;
 	PlatformIO.Platform_GetWindowSize = ImGui_GetWindowSize;
+	PlatformIO.Platform_GetWindowDpiScale = ImGui_GetWindowDPI;
 	PlatformIO.Platform_SetWindowFocus = ImGui_SetWindowFocus;
 	PlatformIO.Platform_GetWindowFocus = ImGui_GetWindowFocus;
 	PlatformIO.Platform_GetWindowMinimized = ImGui_GetWindowMinimized;
