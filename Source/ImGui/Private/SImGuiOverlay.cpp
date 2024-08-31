@@ -67,57 +67,15 @@ public:
 
 		if (IO.WantSetMousePos)
 		{
-			SlateApp.SetCursorPos(IO.MousePos);
-		}
+			FVector2f Position = IO.MousePos;
+			if (!(IO.ConfigFlags & ImGuiConfigFlags_ViewportsEnable))
+			{
+				// Mouse position for single viewport mode is in client space
+				Position += Owner->GetTickSpaceGeometry().AbsolutePosition;
+			}
 
-#if 0
-		// #TODO(Ves): Sometimes inconsistent, something else is changing the cursor later in the frame?
-		if (IO.WantCaptureMouse && !(IO.ConfigFlags & ImGuiConfigFlags_NoMouseCursorChange))
-		{
-			const ImGuiMouseCursor CursorType = ImGui::GetMouseCursor();
-
-			if (IO.MouseDrawCursor || CursorType == ImGuiMouseCursor_None)
-			{
-				SlateCursor->SetType(EMouseCursor::None);
-			}
-			else if (CursorType == ImGuiMouseCursor_Arrow)
-			{
-				SlateCursor->SetType(EMouseCursor::Default);
-			}
-			else if (CursorType == ImGuiMouseCursor_TextInput)
-			{
-				SlateCursor->SetType(EMouseCursor::TextEditBeam);
-			}
-			else if (CursorType == ImGuiMouseCursor_ResizeAll)
-			{
-				SlateCursor->SetType(EMouseCursor::CardinalCross);
-			}
-			else if (CursorType == ImGuiMouseCursor_ResizeNS)
-			{
-				SlateCursor->SetType(EMouseCursor::ResizeUpDown);
-			}
-			else if (CursorType == ImGuiMouseCursor_ResizeEW)
-			{
-				SlateCursor->SetType(EMouseCursor::ResizeLeftRight);
-			}
-			else if (CursorType == ImGuiMouseCursor_ResizeNESW)
-			{
-				SlateCursor->SetType(EMouseCursor::ResizeSouthWest);
-			}
-			else if (CursorType == ImGuiMouseCursor_ResizeNWSE)
-			{
-				SlateCursor->SetType(EMouseCursor::ResizeSouthEast);
-			}
-			else if (CursorType == ImGuiMouseCursor_Hand)
-			{
-				SlateCursor->SetType(EMouseCursor::Hand);
-			}
-			else if (CursorType == ImGuiMouseCursor_NotAllowed)
-			{
-				SlateCursor->SetType(EMouseCursor::SlashedCircle);
-			}
+			SlateCursor->SetPosition(Position.X, Position.Y);
 		}
-#endif
 
 		if (IO.WantTextInput && !Owner->HasKeyboardFocus())
 		{
@@ -184,7 +142,13 @@ public:
 			return false;
 		}
 
-		const FVector2f Position = Event.GetScreenSpacePosition();
+		FVector2f Position = Event.GetScreenSpacePosition();
+		if (!(IO.ConfigFlags & ImGuiConfigFlags_ViewportsEnable))
+		{
+			// Mouse position for single viewport mode is in client space
+			Position -= Owner->GetTickSpaceGeometry().AbsolutePosition;
+		}
+
 		IO.AddMousePosEvent(Position.X, Position.Y);
 
 		return IO.WantCaptureMouse;
