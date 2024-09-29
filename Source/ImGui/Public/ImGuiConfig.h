@@ -6,6 +6,7 @@
 #include <Math/Vector2D.h>
 #include <Math/Vector4.h>
 #include <Misc/AssertionMacros.h>
+#include <Misc/EngineVersionComparison.h>
 
 #define IM_ASSERT(Expr) ensure(Expr)
 
@@ -80,7 +81,11 @@ namespace ImGui
 	/// @endcode
 	struct IMGUI_API FScopedContext
 	{
-		UE_NODISCARD_CTOR explicit FScopedContext(const int32 PIEInstance = GPlayInEditorID);
+#if UE_VERSION_OLDER_THAN(5, 5, 0)
+		UE_NODISCARD_CTOR explicit FScopedContext(const int32 PieSessionId = GPlayInEditorID);
+#else
+		UE_NODISCARD_CTOR explicit FScopedContext(const int32 PieSessionId = UE::GetPlayInEditorID());
+#endif
 		UE_NODISCARD_CTOR explicit FScopedContext(const TSharedPtr<FImGuiContext>& InContext);
 		~FScopedContext();
 

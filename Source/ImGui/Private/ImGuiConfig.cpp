@@ -117,8 +117,8 @@ uint64 ImFileWrite(const void* Data, uint64 Size, uint64 Count, ImFileHandle Fil
 }
 #endif
 
-ImGui::FScopedContext::FScopedContext(const int32 PIEInstance)
-	: FScopedContext(FImGuiModule::Get().FindOrCreateSessionContext(PIEInstance))
+ImGui::FScopedContext::FScopedContext(const int32 PieSessionId)
+	: FScopedContext(FImGuiModule::Get().FindOrCreateSessionContext(PieSessionId))
 {
 }
 

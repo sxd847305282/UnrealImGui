@@ -6,6 +6,7 @@
 #include <HAL/PlatformProcess.h>
 #include <HAL/PlatformString.h>
 #include <HAL/UnrealMemory.h>
+#include <Misc/EngineVersionComparison.h>
 #include <Widgets/SWindow.h>
 
 #if WITH_ENGINE
@@ -352,8 +353,14 @@ void FImGuiContext::Initialize()
 	IO.BackendFlags |= ImGuiBackendFlags_RendererHasViewports;
 	IO.BackendFlags |= ImGuiBackendFlags_RendererHasVtxOffset;
 
+#if UE_VERSION_OLDER_THAN(5, 5, 0)
+	const int32 PieSessionId = GPlayInEditorID;
+#else
+	const int32 PieSessionId = UE::GetPlayInEditorID();
+#endif
+
 	// Ensure each PIE session has a uniquely identifiable context
-	const FString ContextName = (GPlayInEditorID > 0 ? FString::Printf(TEXT("ImGui_%d"), static_cast<int32>(GPlayInEditorID)) : TEXT("ImGui"));
+	const FString ContextName = (PieSessionId > 0 ? FString::Printf(TEXT("ImGui_%d"), PieSessionId) : TEXT("ImGui"));
 
 	const FString IniFilename = FPaths::GeneratedConfigDir() / FPlatformProperties::PlatformName() / ContextName + TEXT(".ini");
 	FPlatformString::Convert(reinterpret_cast<UTF8CHAR*>(IniFilenameUtf8), UE_ARRAY_COUNT(IniFilenameUtf8), *IniFilename, IniFilename.Len() + 1);
@@ -445,12 +452,18 @@ bool FImGuiContext::Listen(int16 Port)
 
 	TAnsiStringBuilder<128> ClientName;
 	ClientName << FApp::GetProjectName();
-	if (GPlayInEditorID > 0)
+
+#if UE_VERSION_OLDER_THAN(5, 5, 0)
+	const int32 PieSessionId = GPlayInEditorID;
+#else
+	const int32 PieSessionId = UE::GetPlayInEditorID();
+#endif
+
+	if (PieSessionId > 0)
 	{
-		ClientName.Appendf(" (%d)", GPlayInEditorID);
+		ClientName << " (" << PieSessionId << ")";
 	}
 
-	// #TODO(Ves): [24/12/23] Returns false but is actually successful?
 	NetImgui::ConnectFromApp(ClientName.ToString(), Port);
 	bIsRemote = true;
 
@@ -463,12 +476,18 @@ bool FImGuiContext::Connect(const FString& Host, int16 Port)
 
 	TAnsiStringBuilder<128> ClientName;
 	ClientName << FApp::GetProjectName();
-	if (GPlayInEditorID > 0)
+
+#if UE_VERSION_OLDER_THAN(5, 5, 0)
+	const int32 PieSessionId = GPlayInEditorID;
+#else
+	const int32 PieSessionId = UE::GetPlayInEditorID();
+#endif
+
+	if (PieSessionId > 0)
 	{
-		ClientName.Appendf(" (%d)", GPlayInEditorID);
+		ClientName << " (" << PieSessionId << ")";
 	}
 
-	// #TODO(Ves): [24/12/23] Returns false but is actually successful?
 	NetImgui::ConnectToApp(ClientName.ToString(), TCHAR_TO_ANSI(*Host), Port);
 	bIsRemote = true;
 

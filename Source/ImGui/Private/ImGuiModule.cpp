@@ -45,9 +45,9 @@ FImGuiModule& FImGuiModule::Get()
 	return Module;
 }
 
-TSharedPtr<FImGuiContext> FImGuiModule::FindOrCreateSessionContext(const int32 PIEInstance)
+TSharedPtr<FImGuiContext> FImGuiModule::FindOrCreateSessionContext(const int32 PieSessionId)
 {
-	TSharedPtr<FImGuiContext> Context = SessionContexts.FindRef(PIEInstance);
+	TSharedPtr<FImGuiContext> Context = SessionContexts.FindRef(PieSessionId);
 	if (!Context.IsValid())
 	{
 		FString Host;
@@ -59,11 +59,11 @@ TSharedPtr<FImGuiContext> FImGuiModule::FindOrCreateSessionContext(const int32 P
 		if (!bShouldConnect)
 		{
 			// Bind consecutive listen ports for PIE sessions
-			Port += PIEInstance + 1;
+			Port += PieSessionId + 1;
 		}
 
 #if WITH_EDITOR
-		if (GIsEditor && PIEInstance == INDEX_NONE)
+		if (GIsEditor && PieSessionId == INDEX_NONE)
 		{
 			const IMainFrameModule* MainFrameModule = FModuleManager::GetModulePtr<IMainFrameModule>("MainFrame");
 			const TSharedPtr<SWindow> MainFrameWindow = MainFrameModule ? MainFrameModule->GetParentWindow() : nullptr;
@@ -76,7 +76,7 @@ TSharedPtr<FImGuiContext> FImGuiModule::FindOrCreateSessionContext(const int32 P
 #endif
 		{
 #if WITH_ENGINE
-			const FWorldContext* WorldContext = GEngine->GetWorldContextFromPIEInstance(PIEInstance);
+			const FWorldContext* WorldContext = GEngine->GetWorldContextFromPIEInstance(PieSessionId);
 			UGameViewportClient* GameViewport = WorldContext ? WorldContext->GameViewport : GEngine->GameViewport;
 			if (IsValid(GameViewport))
 			{
@@ -98,7 +98,7 @@ TSharedPtr<FImGuiContext> FImGuiModule::FindOrCreateSessionContext(const int32 P
 			}
 			else
 			{
-				SessionContexts.Add(PIEInstance, Context);
+				SessionContexts.Add(PieSessionId, Context);
 			}
 		}
 	}
@@ -126,7 +126,13 @@ void FImGuiModule::OnViewportCreated() const
 		return;
 	}
 
-	const TSharedPtr<FImGuiContext> Context = SessionContexts.FindRef(GPlayInEditorID);
+#if UE_VERSION_OLDER_THAN(5, 5, 0)
+	const int32 PieSessionId = GPlayInEditorID;
+#else
+	const int32 PieSessionId = UE::GetPlayInEditorID();
+#endif
+
+	const TSharedPtr<FImGuiContext> Context = SessionContexts.FindRef(PieSessionId);
 	if (!Context.IsValid())
 	{
 		return;
