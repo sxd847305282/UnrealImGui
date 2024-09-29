@@ -278,9 +278,9 @@ static void ImGui_RenderWindow(ImGuiViewport* Viewport, void* UserData)
 	}
 }
 
-const char* ImGui_GetClipboardText(void* UserData)
+const char* ImGui_GetClipboardText(ImGuiContext* Context)
 {
-	TArray<char>* ClipboardBuffer = static_cast<TArray<char>*>(UserData);
+	TArray<char>* ClipboardBuffer = static_cast<TArray<char>*>(Context->PlatformIO.Platform_ClipboardUserData);
 	if (ClipboardBuffer)
 	{
 		FString ClipboardText;
@@ -295,7 +295,7 @@ const char* ImGui_GetClipboardText(void* UserData)
 	return nullptr;
 }
 
-void ImGui_SetClipboardText(void* UserData, const char* ClipboardText)
+void ImGui_SetClipboardText(ImGuiContext* Context, const char* ClipboardText)
 {
 	FPlatformApplicationMisc::ClipboardCopy(UTF8_TO_TCHAR(ClipboardText));
 }
@@ -363,11 +363,6 @@ void FImGuiContext::Initialize()
 	FPlatformString::Convert(reinterpret_cast<UTF8CHAR*>(LogFilenameUtf8), UE_ARRAY_COUNT(LogFilenameUtf8), *LogFilename, LogFilename.Len() + 1);
 	IO.LogFilename = LogFilenameUtf8;
 
-	IO.ClipboardUserData = &ClipboardBuffer;
-	IO.GetClipboardTextFn = ImGui_GetClipboardText;
-	IO.SetClipboardTextFn = ImGui_SetClipboardText;
-	IO.PlatformOpenInShellFn = ImGui_OpenInShell;
-
 	ImGuiPlatformIO& PlatformIO = ImGui::GetPlatformIO();
 
 	PlatformIO.Platform_CreateWindow = ImGui_CreateWindow;
@@ -383,6 +378,11 @@ void FImGuiContext::Initialize()
 	PlatformIO.Platform_SetWindowTitle = ImGui_SetWindowTitle;
 	PlatformIO.Platform_SetWindowAlpha = ImGui_SetWindowAlpha;
 	PlatformIO.Platform_RenderWindow = ImGui_RenderWindow;
+
+	PlatformIO.Platform_ClipboardUserData = &ClipboardBuffer;
+	PlatformIO.Platform_GetClipboardTextFn = ImGui_GetClipboardText;
+	PlatformIO.Platform_SetClipboardTextFn = ImGui_SetClipboardText;
+	PlatformIO.Platform_OpenInShellFn = ImGui_OpenInShell;
 
 	const FString FontPath = FPaths::EngineContentDir() / TEXT("Slate/Fonts/Roboto-Regular.ttf");
 	if (FPaths::FileExists(*FontPath))
