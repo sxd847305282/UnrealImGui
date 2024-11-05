@@ -272,6 +272,7 @@ private:
 void SImGuiOverlay::Construct(const FArguments& Args)
 {
 	SetVisibility(EVisibility::HitTestInvisible);
+	ForceVolatile(true);
 
 	Context = Args._Context.IsValid() ? Args._Context : FImGuiContext::Create();
 	if (Args._HandleInput)
