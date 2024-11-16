@@ -86,6 +86,11 @@ public:
 
 	virtual bool HandleKeyDownEvent(FSlateApplication& SlateApp, const FKeyEvent& Event) override
 	{
+		if (!ShouldHandleEvent(SlateApp, Event))
+		{
+			return false;
+		}
+
 		ImGui::FScopedContext ScopedContext(Owner->GetContext());
 
 		ImGuiIO& IO = ImGui::GetIO();
@@ -103,6 +108,11 @@ public:
 
 	virtual bool HandleKeyUpEvent(FSlateApplication& SlateApp, const FKeyEvent& Event) override
 	{
+		if (!ShouldHandleEvent(SlateApp, Event))
+		{
+			return false;
+		}
+
 		ImGui::FScopedContext ScopedContext(Owner->GetContext());
 
 		ImGuiIO& IO = ImGui::GetIO();
@@ -120,6 +130,11 @@ public:
 
 	virtual bool HandleAnalogInputEvent(FSlateApplication& SlateApp, const FAnalogInputEvent& Event) override
 	{
+		if (!ShouldHandleEvent(SlateApp, Event))
+		{
+			return false;
+		}
+
 		ImGui::FScopedContext ScopedContext(Owner->GetContext());
 
 		ImGuiIO& IO = ImGui::GetIO();
@@ -132,6 +147,11 @@ public:
 
 	virtual bool HandleMouseMoveEvent(FSlateApplication& SlateApp, const FPointerEvent& Event) override
 	{
+		if (!ShouldHandleEvent(SlateApp, Event))
+		{
+			return false;
+		}
+
 		ImGui::FScopedContext ScopedContext(Owner->GetContext());
 
 		ImGuiIO& IO = ImGui::GetIO();
@@ -156,6 +176,11 @@ public:
 
 	virtual bool HandleMouseButtonDownEvent(FSlateApplication& SlateApp, const FPointerEvent& Event) override
 	{
+		if (!ShouldHandleEvent(SlateApp, Event))
+		{
+			return false;
+		}
+
 		ImGui::FScopedContext ScopedContext(Owner->GetContext());
 
 		ImGuiIO& IO = ImGui::GetIO();
@@ -179,6 +204,11 @@ public:
 
 	virtual bool HandleMouseButtonUpEvent(FSlateApplication& SlateApp, const FPointerEvent& Event) override
 	{
+		if (!ShouldHandleEvent(SlateApp, Event))
+		{
+			return false;
+		}
+
 		ImGui::FScopedContext ScopedContext(Owner->GetContext());
 
 		ImGuiIO& IO = ImGui::GetIO();
@@ -208,6 +238,11 @@ public:
 
 	virtual bool HandleMouseWheelOrGestureEvent(FSlateApplication& SlateApp, const FPointerEvent& Event, const FPointerEvent* GestureEvent) override
 	{
+		if (!ShouldHandleEvent(SlateApp, Event))
+		{
+			return false;
+		}
+
 		ImGui::FScopedContext ScopedContext(Owner->GetContext());
 
 		ImGuiIO& IO = ImGui::GetIO();
@@ -215,6 +250,19 @@ public:
 		IO.AddMouseWheelEvent(0.0f, Event.GetWheelDelta());
 
 		return IO.WantCaptureMouse;
+	}
+
+	bool ShouldHandleEvent(FSlateApplication& SlateApp, const FInputEvent& Event) const
+	{
+#if WITH_EDITORONLY_DATA
+		if (GIntraFrameDebuggingGameThread)
+		{
+			// Discard input events when the game thread is paused for debugging
+			return false;
+		}
+#endif
+
+		return true;
 	}
 
 private:
