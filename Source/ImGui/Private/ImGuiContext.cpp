@@ -563,17 +563,17 @@ void FImGuiContext::BeginFrame()
 		IO.Fonts->GetTexDataAsRGBA32(&TextureDataRaw, &TextureWidth, &TextureHeight, &BytesPerPixel);
 
 #if WITH_ENGINE
-		UTexture2D* FontAtlasTexture = UTexture2D::CreateTransient(TextureWidth, TextureHeight, PF_R8G8B8A8, TEXT("ImGuiFontAtlas"));
-		FontAtlasTexture->Filter = TF_Bilinear;
-		FontAtlasTexture->AddressX = TA_Wrap;
-		FontAtlasTexture->AddressY = TA_Wrap;
+		UTexture2D* Texture = UTexture2D::CreateTransient(TextureWidth, TextureHeight);
+		Texture->UpdateResource();
 
-		uint8* FontAtlasTextureData = static_cast<uint8*>(FontAtlasTexture->GetPlatformData()->Mips[0].BulkData.Lock(LOCK_READ_WRITE));
-		FMemory::Memcpy(FontAtlasTextureData, TextureDataRaw, TextureWidth * TextureHeight * BytesPerPixel);
-		FontAtlasTexture->GetPlatformData()->Mips[0].BulkData.Unlock();
-		FontAtlasTexture->UpdateResource();
+		FUpdateTextureRegion2D* TextureRegion = new FUpdateTextureRegion2D(0, 0, 0, 0, TextureWidth, TextureHeight);
+		auto DataCleanup = [](uint8* Data, const FUpdateTextureRegion2D* UpdateRegion)
+		{
+			delete UpdateRegion;
+		};
+		Texture->UpdateTextureRegions(0, 1u, TextureRegion, BytesPerPixel* TextureWidth, BytesPerPixel, TextureDataRaw, DataCleanup);
 
-		FontAtlasTexturePtr.Reset(FontAtlasTexture);
+		FontAtlasTexturePtr.Reset(Texture);
 #else
 		FontAtlasTexturePtr = FSlateDynamicImageBrush::CreateWithImageData(
 			TEXT("ImGuiFontAtlas"), FVector2D(TextureWidth, TextureHeight),
